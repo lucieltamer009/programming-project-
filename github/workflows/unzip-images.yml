@@ -1,0 +1,42 @@
+name: Unzip Images
+
+on:
+  push:
+    paths:
+      - 'images.zip'
+  workflow_dispatch:
+
+jobs:
+  unzip-and-commit:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Unzip images
+        run: |
+          if [ -f images.zip ]; then
+            unzip -o images.zip
+            echo "Images unzipped successfully"
+          else
+            echo "images.zip not found"
+          fi
+      
+      - name: Remove zip file
+        run: |
+          rm -f images.zip
+      
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add images/
+          git rm --cached images.zip 2>/dev/null || true
+          
+          if git diff --quiet --cached; then
+            echo "No changes to commit"
+          else
+            git commit -m "Extract images from images.zip"
+            git push
+          fi
